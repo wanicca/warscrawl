@@ -3,6 +3,7 @@ import os
 import feedparser
 import re
 import webbrowser
+import urllib2
 
 def textProcess(s):
     pat1 = re.compile('</[^>]+>|<[^>]+/>')
@@ -16,6 +17,19 @@ def printTitle(n,s):
     print('\033[1;32;40m[%d]\033[1;31;40m%s\033[0m'%(n,s))
 def openURL(url):
     webbrowser.open_new_tab(url)
+
+def getHtml(url):
+    html = urllib2.urlopen(url).read()
+    return html
+
+def saveHtml(file_name,file_content):
+#    注意windows文件命名的禁用符，比如 /
+    with open (file_name.replace('/','_')+".html","wb") as f:
+#   写文件用bytes而不是str，所以要转码
+        f.write( file_content )
+
+
+
 
 print('加载配置中……')
 if(not os.path.exists('linklist')):
@@ -44,6 +58,12 @@ for lk in lklst:
             print('-----(%d-%d)-----'%(count-showentmax,count))
             key = raw_input(">")
             while(key!=''):
-                openURL(feed.entries[count-showentmax-1+int(key)].id) #打开外部浏览器
+                if(key[0]=='d'):
+                    index=count-showentmax-1+int(key[1:])
+                    html = getHtml(feed.entries[index].id)
+                    saveHtml(feed.entries[index].title,html)
+                    print ("缓存网页%d成功"%int(key[1:])) #下载文件
+                else:
+                    openURL(feed.entries[count-showentmax-1+int(key)].id) #打开外部浏览器
                 key = raw_input(">")
         count+=1
